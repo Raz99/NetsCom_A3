@@ -35,13 +35,16 @@ if __name__ == "__main__":
             connectionSocket.send(maximum_msg_size.encode())
 
         if maximum_msg_size is not None: # if maximum_msg_size has been already defined
-            # Gets packets from Client
+            # Gets packages from Client
             full_message = ""
             received_sequences = []
+
+            last_ack = -1
+            received_out_of_order = []
             while True:
-                # CHANGE HERE
-                data = connectionSocket.recv(4096).decode('utf-8')
+                data = connectionSocket.recv(4096).decode('utf-8') # CHANGE HERE
                 # data = connectionSocket.recv(int(maximum_msg_size)).decode('utf-8')
+
                 if not data:
                     print(f"The message is: \"{full_message}\"")
                     break
@@ -51,12 +54,26 @@ if __name__ == "__main__":
                 sequence_number = int(sequence_number)  # Casting
                 full_message = full_message + content
                 print(f"Got from client {addrClient}: [M{sequence_number}] Content: {content}")
-                
-                # Sends response to Client
-                for i in range(sequence_number):
-                    received_sequences.append(sequence_number)
-                    connectionSocket.
-                connectionSocket.send(f"ACK M{sequence_number}".encode())
 
-        # connectionSocket.send(capitalizedSentence).encode()
+                # ACK
+                # If the current message is in sequence, then update last_ack
+                if sequence_number == (last_ack + 1):
+                    last_ack += 1
+
+                    # Checks if received messages out of order are now in sequence
+                    while (last_ack + 1) in received_out_of_order:
+                        last_ack += 1
+                        received_out_of_order.remove(last_ack)
+
+                else:
+                    # If the current message is not in sequence, then add it to received_out_of_order
+                    received_out_of_order.append(sequence_number)
+
+                # Sends ACK to Client
+                #ack_message = f"ACK{last_ack}"
+                # connectionSocket.send(ack_message.encode('utf-8'))
+                # print(f"Sent to Client: {ack_message}")
+                connectionSocket.send(str(last_ack).encode('utf-8'))
+                print(f"Sent to Client: ACK{last_ack}")
+
         connectionSocket.close()

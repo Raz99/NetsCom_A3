@@ -1,30 +1,42 @@
 import math
-import struct
 from socket import *
 from InputFileReader import *
 
 def send_message(socket, message, maximum_msg_size, window_size):
-    message_bytes = message.encode('utf-8') # convert to bytes
-    message_size = len(message_bytes) # the size of bytes
+    message_bytes = message.encode('utf-8')  # Converts to bytes
+    message_size = len(message_bytes)       # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
-    flag = False
-    i = 0
-    if not flag:
-        while i < num_of_messages or i < window_size:
-            
+    i = 0  # Current message index
 
-    for i in range(num_of_messages):
+    # Sends the initial window of messages
+    while i < num_of_messages and i < window_size:
         start = i * maximum_msg_size
         end = start + maximum_msg_size
         content = message_bytes[start:end]
-
-        # Separation represented by "|"
-        sequence_number = f"{i}|".encode('utf-8')
+        sequence_number = f"{i}|".encode('utf-8')  # Adds sequence number
+        # len(sequence_number)
         package = sequence_number + content
+        socket.send(package)  # Sends the package
+        print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages})")
+        i += 1
 
-        socket.send(package)
-        print(f"M{i} has been sent to server (status: {i+1}/{num_of_messages})")
-        ack = socket.recv(1)
+    # waiting for the next ack
+    while i < num_of_messages:
+        ack = int(socket.recv(1024).decode('utf-8'))  # Waits for ack
+        print(f"ACK{ack} has been received")
+
+        # sending a package if ack arrived
+        for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
+            start = j * maximum_msg_size
+            end = start + maximum_msg_size
+            content = message_bytes[start:end]
+            sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
+            package = sequence_number + content
+            socket.send(package)  # Sends the package
+            print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
+
+            i = ack + 1
+
 
 if __name__ == "__main__":
     # SERVER_ADDRESS = ('localhost', 13000)
@@ -77,7 +89,7 @@ if __name__ == "__main__":
 
 
 
-    send_message(clientSocket, message, int(maximum_msg_size), window_size)
+    send_message(clientSocket, message, int(maximum_msg_size), int(window_size))
 
     # message.byte.size < clientSocket.recv(maximum_msg_size)
 
