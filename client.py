@@ -1,15 +1,5 @@
-# import socket
 from socket import *
-from turtledemo.penrose import start
-
-# SERVER_ADDRESS = ('localhost', 13000)
-serverName = 'localhost'
-serverPort = 13000
-SERVER_ADDRESS = (serverName, serverPort)
-
-# clientSocket = socket.socket()
-clientSocket = socket(AF_INET, SOCK_STREAM)
-clientSocket.connect(SERVER_ADDRESS)
+from InputFileReader import *
 
 def send_message(socket, message, maximum_msg_size):
     message_bytes = message.encode('utf-8') # convert to bytes
@@ -32,6 +22,16 @@ def send_message(socket, message, maximum_msg_size):
 
 
 if __name__ == "__main__":
+
+    # SERVER_ADDRESS = ('localhost', 13000)
+    serverName = 'localhost'
+    serverPort = 13000
+    SERVER_ADDRESS = (serverName, serverPort)
+
+    # clientSocket = socket.socket()
+    clientSocket = socket(AF_INET, SOCK_STREAM)
+    clientSocket.connect(SERVER_ADDRESS)
+
     # Client sends a request to Server
     print("The client is asking the server for maximum size of of a single message")
     sentence = "asking the maximum size of of a single message"

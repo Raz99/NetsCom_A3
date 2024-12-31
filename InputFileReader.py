@@ -16,16 +16,16 @@ class InputFileReader:
     def get_value(self, field):
         for line in self.read_lines():
             if line.startswith(field):
-                msg = line.split(field + ':')[1] # Extracts message
-                no_spaces_line = msg.strip() # Removes external spaces
-                result = no_spaces_line.strip() # Removes external quotes
+                val = line.split(field + ':')[1] # Extracts message
+                no_spaces_line = val.strip() # Removes external spaces
+                result = no_spaces_line.strip('"') # Removes external quotes
                 if field == "maximum_msg_size" or field == "window_size" or field == "timeout":
                     return int(result)
                 else:
                     return result
-        print("Unknown field")
+        print("Unknown field or file is invalid")
 
-# if __name__ == "__main__":
-#     file_reader = InputFileReader("input.txt")
-#     message = file_reader.get_value("message")
-#     print("Message:", message)
+if __name__ == "__main__":
+    file_reader = InputFileReader("input.txt")
+    message = file_reader.get_value("message")
+    print("Message:", message)

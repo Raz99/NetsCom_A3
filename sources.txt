@@ -1,1 +1,3 @@
 https://chatgpt.com/share/6772ee47-0360-8000-8dbf-8331ac06a570 - הסבר על מרכיבי המטלה
+https://www.w3schools.com/python/ref_file_readlines.asp - הסבר על פתיחה וקריאה מקובץ
+https://www.30secondsofcode.org/python/s/byte-size/ - כמות בתים בהודעה
