@@ -10,22 +10,18 @@ class InputFileReader:
         except FileNotFoundError:
             print("Error: File not found")
 
-        except Exception:
-            print("Error occurred")
+        except Exception as e:
+            print("Error occurred: ", e)
 
     def get_value(self, field):
-        for line in self.read_lines():
-            if line.startswith(field):
-                val = line.split(field + ':')[1] # Extracts message
-                no_spaces_line = val.strip() # Removes external spaces
-                result = no_spaces_line.strip('"') # Removes external quotes
-                if field == "maximum_msg_size" or field == "window_size" or field == "timeout":
-                    return int(result)
-                else:
-                    return result
-        print("Unknown field or file is invalid")
+        lines_list = self.read_lines()
+        if lines_list is not None:
+            for line in lines_list:
+                if line.startswith(field):
+                    val = line.split(field + ':')[1] # Extracts message
+                    if field == "message":
+                        val = val.strip() # Removes external spaces
+                        val = val.strip('"') # Removes external quotes
+                    return val
 
-if __name__ == "__main__":
-    file_reader = InputFileReader("input.txt")
-    message = file_reader.get_value("message")
-    print("Message:", message)
+        print("Unknown field or file is invalid")
