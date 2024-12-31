@@ -11,7 +11,6 @@ SERVER_ADDRESS = (serverName, serverPort)
 clientSocket = socket(AF_INET, SOCK_STREAM)
 clientSocket.connect(SERVER_ADDRESS)
 
-
 def send_message(socket, message, maximum_msg_size):
     message_bytes = message.encode('utf-8') # convert to bytes
     message_size = len(message_bytes) # the size of bytes
@@ -32,7 +31,7 @@ def send_message(socket, message, maximum_msg_size):
 
 
 
-def main():
+if __name__ == "__main__":
     # Client sends a request to Server
     print("The client is asking the server for maximum size of of a single message")
     sentence = "asking the maximum size of of a single message"
