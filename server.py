@@ -3,6 +3,16 @@ from socket import *
 import client
 from InputFileReader import *
 
+def receive_message (connection_socket, buffer_size):
+    data = connection_socket.recv(buffer_size)
+    if not data:
+        return None, None
+    separate_index = data.index(b'|')
+    sequence_number = int(data[:separate_index].decode('utf-8'))
+    content = data[separate_index + 1:].decode('utf-8')
+    return sequence_number, content
+
+
 if __name__ == "__main__":
     SERVER_ADDRESS = ('', 13000)
     # serverSocket = socket.socket()
@@ -42,7 +52,7 @@ if __name__ == "__main__":
         if maximum_msg_size is not None: # if maximum_msg_size has been already defined
             # Gets packages from Client
             full_message = ""
-            received_sequences = []
+            received_sequences = {}
 
             last_ack = -1
             received_out_of_order = []
@@ -50,15 +60,14 @@ if __name__ == "__main__":
             while True:
                 # data = connectionSocket.recv(int(maximum_msg_size) + len(client.sequence_number)).decode('utf-8')
                 #data = connectionSocket.recv(int(maximum_msg_size) + 10).decode('utf-8')
-                data = connectionSocket.recv(4096).decode('utf-8')
+                sequence_number, content = receive_message(connectionSocket, int(maximum_msg_size))
 
-                if not data:
+                if not content:
                     print(f"The message is: \"{full_message}\"")
                     break
 
                 # Decodes the sequence number and content
-                sequence_number, content = data.split('|', 1) # Separation represented by "|"
-                sequence_number = int(sequence_number)  # Casting
+                #sequence_number = int(sequence_number)  # Casting
                 full_message = full_message + content
                 print(f"Got from client {addrClient}: [M{sequence_number}] Content: {content}")
 

@@ -6,18 +6,21 @@ def send_message(socket, message, maximum_msg_size):
     message_bytes = message.encode('utf-8')  # Converts to bytes
     message_size = len(message_bytes)       # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
+    header_size = 3 # 2 digits and a seperator "xx|"
     i = 0  # Current message index
-    # flag1 = True
-    # flag2 = not flag1
 
     # Sends the initial window of messages
     #while i < num_of_messages and i < window_size:
     while i < num_of_messages:
         start = i * maximum_msg_size
-        end = start + maximum_msg_size
+        end = min(start + maximum_msg_size, message_size)
         content = message_bytes[start:end]
         sequence_number = f"{i}|".encode('utf-8')  # Adds sequence number
         package = sequence_number + content
+        if len(package) > int(maximum_msg_size):
+            content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
+            package = f"{i}|".encode('utf-8') + content
+
         socket.send(package)  # Sends the package
         print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages})")
         i += 1
