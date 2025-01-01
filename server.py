@@ -49,15 +49,15 @@ if __name__ == "__main__":
 
             while True:
                 # data = connectionSocket.recv(int(maximum_msg_size) + len(client.sequence_number)).decode('utf-8')
-                data = connectionSocket.recv(int(maximum_msg_size) + 10).decode('utf-8')
-                # data = connectionSocket.recv(4096).decode('utf-8')
+                #data = connectionSocket.recv(int(maximum_msg_size) + 10).decode('utf-8')
+                data = connectionSocket.recv(4096).decode('utf-8')
 
                 if not data:
                     print(f"The message is: \"{full_message}\"")
                     break
 
                 # Decodes the sequence number and content
-                sequence_number, content = data.split('|', 1)  # Separation represented by "|"
+                sequence_number, content = data.split('|', 1) # Separation represented by "|"
                 sequence_number = int(sequence_number)  # Casting
                 full_message = full_message + content
                 print(f"Got from client {addrClient}: [M{sequence_number}] Content: {content}")
@@ -80,7 +80,8 @@ if __name__ == "__main__":
                 #ack_message = f"ACK{last_ack}"
                 # connectionSocket.send(ack_message.encode('utf-8'))
                 # print(f"Sent to Client: {ack_message}")
-                connectionSocket.send(str(last_ack).encode('utf-8'))
-                print(f"Sent to Client: ACK{last_ack}")
 
-        connectionSocket.close()
+                # connectionSocket.send(str(last_ack).encode('utf-8'))
+                # print(f"Sent to Client: ACK{last_ack}")
+
+            connectionSocket.close()
