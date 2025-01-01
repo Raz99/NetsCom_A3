@@ -86,11 +86,11 @@ if __name__ == "__main__":
                     received_out_of_order.append(sequence_number)
 
                 # Sends ACK to Client
-                #ack_message = f"ACK{last_ack}"
-                # connectionSocket.send(ack_message.encode('utf-8'))
-                # print(f"Sent to Client: {ack_message}")
+                ack_message = f"ACK{last_ack}"
+                connectionSocket.send(ack_message.encode('utf-8'))
+                print(f"Sent to Client: {ack_message}")
 
-                # connectionSocket.send(str(last_ack).encode('utf-8'))
-                # print(f"Sent to Client: ACK{last_ack}")
+                connectionSocket.send(str(last_ack).encode('utf-8'))
+                print(f"Sent to Client: ACK{last_ack}")
 
             connectionSocket.close()
