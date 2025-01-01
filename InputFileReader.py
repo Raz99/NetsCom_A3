@@ -11,7 +11,7 @@ class InputFileReader:
             print("Error: File not found")
 
         except Exception as e:
-            print("Error occurred: ", e)
+            print("Error occurred:", e)
 
     def get_value(self, field):
         lines_list = self.read_lines()

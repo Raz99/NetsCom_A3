@@ -1,4 +1,6 @@
 from socket import *
+
+import client
 from InputFileReader import *
 
 if __name__ == "__main__":
@@ -26,6 +28,9 @@ if __name__ == "__main__":
                 if int(choice) == 1:
                     maximum_msg_size = input("Enter the maximum message size: ")
 
+                    if not maximum_msg_size.isnumeric():
+                        raise ValueError("Maximum message size should be a number")
+
                 elif int(choice) == 2:
                     maximum_msg_size = file_reader.get_value("maximum_msg_size")
 
@@ -41,9 +46,11 @@ if __name__ == "__main__":
 
             last_ack = -1
             received_out_of_order = []
+
             while True:
-                data = connectionSocket.recv(4096).decode('utf-8') # CHANGE HERE
-                # data = connectionSocket.recv(int(maximum_msg_size)).decode('utf-8')
+                # data = connectionSocket.recv(int(maximum_msg_size) + len(client.sequence_number)).decode('utf-8')
+                data = connectionSocket.recv(int(maximum_msg_size) + 10).decode('utf-8')
+                # data = connectionSocket.recv(4096).decode('utf-8')
 
                 if not data:
                     print(f"The message is: \"{full_message}\"")
