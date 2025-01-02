@@ -5,7 +5,7 @@ from client import HEADER_SIZE
 def split_data(data, maximum_msg_size, remaining_messages):
     header_size = HEADER_SIZE
     while data:  # Runs as long as there are separators in data
-        sequence_number = data[:header_size].decode('utf-8').strip()
+        sequence_number = int(data[:header_size].decode('utf-8').strip())
         end_pos = min(header_size + maximum_msg_size, len(data))
         content = data[header_size: end_pos].decode('utf-8')
         remaining_messages.append((sequence_number, content))
@@ -52,8 +52,6 @@ def handle_client(server_addr):
         if maximum_msg_size:  # if maximum_msg_size has been already defined
             # Gets packages from Client
             full_message = ""
-            received_sequences = {}
-
             last_ack = -1
             received_out_of_order = []
             remaining_messages = []

@@ -26,24 +26,37 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
         print(f"Content: \"{content.decode('utf-8')}\"")
         i += 1
 
-    # Waits for the next ack
+    # Waits for the next ACK
     while i < num_of_messages:
-        ack = int(client_socket.recv(1024).decode('utf-8'))  # Waits for ack
+        ack = int(client_socket.recv(1024).decode('utf-8'))  # Gets ACK when one is sent
         print(f"ACK{ack} has been received")
 
-        # # sending a package if ack arrived
+        # Sends another package if ACK arrived
         for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
             start = j * maximum_msg_size
-            end = start + maximum_msg_size
+            end = min(start + maximum_msg_size, message_size)
             content = message_bytes[start:end]
-            sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
+            sequence_number = f"{j}"  # Adds sequence number
+            while len(sequence_number) < HEADER_SIZE:
+                sequence_number = " " + sequence_number
+            sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
-            if len(package) > int(maximum_msg_size) + HEADER_SIZE:
-                content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
-                package = f"{i}|".encode('utf-8') + content
             client_socket.send(package)  # Sends the package
-            print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
+            print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages}):")
+            print(f"Content: \"{content.decode('utf-8')}\"")
             i = ack + 1
+        # for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
+        #     start = j * maximum_msg_size
+        #     end = start + maximum_msg_size
+        #     content = message_bytes[start:end]
+        #     sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
+        #     package = sequence_number + content
+        #     if len(package) > int(maximum_msg_size) + HEADER_SIZE:
+        #         content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
+        #         package = f"{i}|".encode('utf-8') + content
+        #     client_socket.send(package)  # Sends the package
+        #     print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
+        #     i = ack + 1
 
 def connect_to_server(host, port):
     server_addr = (host, port)

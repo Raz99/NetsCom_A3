@@ -1,4 +1,4 @@
-message: "This is a test message"
-maximum_msg_size:400
+message: "A computer network is a set of computers sharing resources located on or provided by network nodes."
+maximum_msg_size:20
 window_size:4
 timeout:5
