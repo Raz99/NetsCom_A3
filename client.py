@@ -16,7 +16,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
 
     # Sends the initial window of messages
     i = 0  # Current message index
-    ack = -1
+    ack = -1 # No ACKs has been received yet
     limit = window_size
     while i < num_of_messages or i < ack + 1:
         if i < window_size or i < limit:
@@ -33,8 +33,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
             i += 1
 
         print(f"[Prompt] Window status: {limit - i}/{window_size} available slots")
-
-        ack_message = client_socket.recv(1024).decode('utf-8')
+        ack_message = client_socket.recv(4096).decode('utf-8')
 
         if not ack_message:
             continue
