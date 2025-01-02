@@ -1,6 +1,6 @@
 from socket import *
 from InputFileReader import *
-
+from client import HEADER_SIZE
 
 # def receive_message(client_connection, buffer_size):
 #     data = client_connection.recv(buffer_size)
@@ -12,11 +12,11 @@ from InputFileReader import *
 #     return sequence_number, content
 
 def split_data(data, maximum_msg_size, remaining_messages):
-    while data.find(b'|') != -1:  # Runs as long as there are separators in data
-        separator_index = data.index(b'|')
-        sequence_number = data[:separator_index].decode('utf-8')
-        end_pos = min(separator_index + 1 + maximum_msg_size, len(data))
-        content = data[separator_index + 1: end_pos].decode('utf-8')
+    header_size = HEADER_SIZE
+    while data:  # Runs as long as there are separators in data
+        sequence_number = data[:header_size].decode('utf-8').strip()
+        end_pos = min(header_size + maximum_msg_size, len(data))
+        content = data[header_size: end_pos].decode('utf-8')
         remaining_messages.append((sequence_number, content))
         data = data[end_pos:]
 

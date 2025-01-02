@@ -2,11 +2,13 @@ import math
 from socket import *
 from InputFileReader import *
 
+# Global Variables
+HEADER_SIZE = 4
+
 def send_message(client_socket, message, maximum_msg_size, window_size):
-    message_bytes = message.encode('utf-8')  # Converts to bytes
-    message_size = len(message_bytes)       # Size of the message in bytes
+    message_bytes = message.encode('utf-8') # Converts to bytes
+    message_size = len(message_bytes) # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
-    header_size = 3 # 2 digits and a seperator "xx|"
     i = 0  # Current message index
 
     # Sends the initial window of messages
@@ -14,7 +16,10 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
         start = i * maximum_msg_size
         end = min(start + maximum_msg_size, message_size)
         content = message_bytes[start:end]
-        sequence_number = f"{i}|".encode('utf-8')  # Adds sequence number
+        sequence_number = f"{i}" # Adds sequence number
+        while len(sequence_number) < HEADER_SIZE:
+            sequence_number = " " + sequence_number
+        sequence_number = sequence_number.encode('utf-8')
         package = sequence_number + content
         client_socket.send(package)  # Sends the package
         print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages}):")
@@ -78,7 +83,7 @@ def connect_to_server(host, port):
                        '[Prompt] ([1] input from the user | [2] from a text input file): ')
 
         if int(choice) == 1:
-            window_size = input('[Prompt] Provide the required window size:')
+            window_size = input('[Prompt] Provide the required window size: ')
 
             if not window_size.isnumeric():
                 raise ValueError("Window size should be a number")
