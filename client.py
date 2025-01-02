@@ -15,14 +15,6 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
     num_of_messages = math.ceil(message_size / maximum_msg_size)
     i = 0  # Current message index
 
-    while True:
-        ack_message = client_socket.recv(1024).decode('utf-8') # Gets ACK when one is sent
-        ack = strip_ack(ack_message) # Separate ACKs
-        print(f"ACK{ack} has been received")
-
-        if i >= num_of_messages and i == ack + 1:
-            break
-
         # Sends the initial window of messages
         while i < num_of_messages and i < window_size:
             start = i * maximum_msg_size
