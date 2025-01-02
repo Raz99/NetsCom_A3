@@ -16,7 +16,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
 
     # Sends the initial window of messages
     i = 0  # Current message index
-    ack = 0 # Temp
+    ack = -1
     limit = window_size
     while i < num_of_messages or i < ack + 1:
         if i < window_size or i < limit:
@@ -29,19 +29,20 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
             client_socket.send(package)  # Sends the package
-            print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages}):")
-            print(f"Content: \"{content.decode('utf-8')}\"")
+            print(f"Sent to Server: [M{i}] Content: \"{content.decode('utf-8')}\" (status: {i + 1}/{num_of_messages}):")
             i += 1
 
-        if i >= window_size:
-            ack_message = client_socket.recv(1024).decode('utf-8')
+        print(f"[Prompt] Window status: {limit - i}/{window_size} available slots")
 
-            if not ack_message:
-                continue
+        ack_message = client_socket.recv(1024).decode('utf-8')
 
-            ack = strip_ack(ack_message)
-            print(f"ACK{ack} has been received")
-            limit += ack + 1
+        if not ack_message:
+            continue
+
+        prev_ack = ack
+        ack = strip_ack(ack_message)
+        print(f"Got from Server: ACK{ack}")
+        limit += ack - prev_ack # Slides window
 
 def connect_to_server(host, port):
     server_addr = (host, port)
@@ -57,7 +58,7 @@ def connect_to_server(host, port):
 
     # Client gets a response from Server
     maximum_msg_size = int(client_socket.recv(4096).decode('utf-8'))
-    print('From Server:', maximum_msg_size)
+    print(f"Got from Server: {maximum_msg_size}")
 
     file_reader = InputFileReader("input.txt")  # Reads input file
 
@@ -75,7 +76,7 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
-    print(f"Message: {message}")
+    print(f"[Prompt] Message: {message}")
 
     window_size = None
     while window_size is None:
@@ -94,16 +95,11 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
-    print(f"Window size: {window_size}")
+    print(f"[Prompt] Window size: {window_size}")
     window_size = int(window_size)
     send_message(client_socket, message, maximum_msg_size, window_size)
 
-    # message.byte.size < clientSocket.recv(maximum_msg_size)
-
-    # while(not all acks has been returned)
-    #     clientSocket.send(sentence.encode()) # Sending message
-    #     clientSocket.sendall()
-
+    print("Connection closed")
     client_socket.close()
 
 if __name__ == "__main__":
