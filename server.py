@@ -2,15 +2,6 @@ from socket import *
 from InputFileReader import *
 from client import HEADER_SIZE
 
-# def receive_message(client_connection, buffer_size):
-#     data = client_connection.recv(buffer_size)
-#     if not data:
-#         return None, None
-#     separate_index = data.index(b'|')
-#     sequence_number = int(data[:separate_index].decode('utf-8'))
-#     content = data[separate_index + 1:].decode('utf-8')
-#     return sequence_number, content
-
 def split_data(data, maximum_msg_size, remaining_messages):
     header_size = HEADER_SIZE
     while data:  # Runs as long as there are separators in data
@@ -69,10 +60,6 @@ def handle_client(server_addr):
             remaining_messages = []
 
             while True:
-                # data = connectionSocket.recv(int(maximum_msg_size) + len(client.sequence_number)).decode('utf-8')
-                # data = connectionSocket.recv(int(maximum_msg_size) + 10).decode('utf-8')
-
-                # Temp - start
                 data = client_connection.recv(4096)
 
                 if not data:
@@ -86,19 +73,6 @@ def handle_client(server_addr):
                     full_message = full_message + content
                     print(f"Got from client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
                 remaining_messages = []
-                # Temp - end
-
-                # sequence_number, content = receive_message(client_connection, maximum_msg_size)
-
-                # if not content:
-                #     print(f"Combining the messages provides the data: \"{full_message}\"")
-                #     keep_handling = False # Server will stop handling clients altogether
-                #     break
-
-                # Decodes the sequence number and content
-                # sequence_number = int(sequence_number)  # Casting
-                # full_message = full_message + content
-                # print(f"Got from client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
                 # ACK
                 # If the current message is in sequence, then update last_ack
