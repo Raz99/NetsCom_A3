@@ -85,12 +85,12 @@ def handle_client(server_addr):
                         received_out_of_order.append(sequence_number)
 
                     # Sends ACK to Client
-                    # ack_message = f"ACK{last_ack}"
-                    # client_connection.send(ack_message.encode('utf-8'))
-                    # print(f"Sent to Client: {ack_message}")
+                    ack_message = f"ACK{last_ack}"
+                    client_connection.send(ack_message.encode('utf-8'))
+                    print(f"Sent to Client: {ack_message}")
 
-                    client_connection.send(str(last_ack).encode('utf-8'))
-                    print(f"Sent to Client: ACK{last_ack}")
+                    # client_connection.send(str(last_ack).encode('utf-8'))
+                    # print(f"Sent to Client: ACK{last_ack}")
 
                 remaining_messages.clear()
 

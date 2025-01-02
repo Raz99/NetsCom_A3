@@ -3,3 +3,4 @@ https://www.w3schools.com/python/ref_file_readlines.asp - הסבר על פתיח
 https://www.30secondsofcode.org/python/s/byte-size - כמות בתים בהודעה
 https://www.geeksforgeeks.org/floor-ceil-function-python - לעגל מספר כלפי מעלה
 https://www.w3schools.com/python/python_tuples.asp - tuple
+https://www.w3schools.com/python/ref_string_rfind.asp - rfind method
