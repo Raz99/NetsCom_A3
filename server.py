@@ -24,6 +24,8 @@ def handle_client(server_addr):
         client_connection, client_addr = server_socket.accept()
         print(f"Accepted connection from {client_addr}")
         sentence = client_connection.recv(4096).decode('utf-8')
+        while not sentence:
+            sentence = client_connection.recv(4096).decode('utf-8')
         print(f"Got from client {client_addr}: {sentence}")
 
         maximum_msg_size = None
@@ -45,7 +47,7 @@ def handle_client(server_addr):
 
                 else:
                     print('[Prompt] Invalid input')
-            print(f"Sent to Client: Maximum message size is {maximum_msg_size}",end="")
+            print(f"Sent to Client: Maximum message size is {maximum_msg_size}")
             client_connection.send(maximum_msg_size.encode('utf-8'))
             maximum_msg_size = int(maximum_msg_size)
 

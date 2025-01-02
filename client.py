@@ -13,49 +13,35 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
     message_bytes = message.encode('utf-8') # Converts to bytes
     message_size = len(message_bytes) # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
-    i = 0  # Current message index
 
     # Sends the initial window of messages
-    while i < num_of_messages and i < window_size:
-        start = i * maximum_msg_size
-        end = min(start + maximum_msg_size, message_size)
-        content = message_bytes[start:end]
-        sequence_number = f"{i}" # Adds sequence number
-        while len(sequence_number) < HEADER_SIZE:
-            sequence_number = " " + sequence_number
-        sequence_number = sequence_number.encode('utf-8')
-        package = sequence_number + content
-        client_socket.send(package)  # Sends the package
-        print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages}):")
-        print(f"Content: \"{content.decode('utf-8')}\"")
-        i += 1
-
-    while True:
-        ack_message = client_socket.recv(1024).decode('utf-8')  # Gets ACK when one is sent
-        ack = strip_ack(ack_message)  # Separate ACKs
-        print(f"ACK{ack} has been received")
-
-        if i >= num_of_messages and i == ack + 1:
-            break
-
-        # Sends another package if ACK arrived
-        start = i
-        end = min(ack + 1 + window_size, num_of_messages)
-
-        # Waits for the next ACK
-        for j in range(start, end):
-            start = j * maximum_msg_size
+    i = 0  # Current message index
+    ack = 0 # Temp
+    limit = window_size
+    while i < num_of_messages or i < ack + 1:
+        if i < window_size or i < limit:
+            start = i * maximum_msg_size
             end = min(start + maximum_msg_size, message_size)
             content = message_bytes[start:end]
-            sequence_number = f"{j}"  # Adds sequence number
+            sequence_number = f"{i}" # Adds sequence number
             while len(sequence_number) < HEADER_SIZE:
                 sequence_number = " " + sequence_number
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
             client_socket.send(package)  # Sends the package
-            print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages}):")
+            print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages}):")
             print(f"Content: \"{content.decode('utf-8')}\"")
-            i+=1
+            i += 1
+
+        if i >= window_size:
+            ack_message = client_socket.recv(1024).decode('utf-8')
+
+            if not ack_message:
+                continue
+
+            ack = strip_ack(ack_message)
+            print(f"ACK{ack} has been received")
+            limit += ack + 1
 
 def connect_to_server(host, port):
     server_addr = (host, port)
@@ -89,6 +75,8 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
+    print(f"Message: {message}")
+
     window_size = None
     while window_size is None:
         choice = input('[Prompt] Choose a number representing how you prefer to pass the value of the window size\n'
@@ -106,6 +94,7 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
+    print(f"Window size: {window_size}")
     window_size = int(window_size)
     send_message(client_socket, message, maximum_msg_size, window_size)
 
@@ -118,7 +107,7 @@ def connect_to_server(host, port):
     client_socket.close()
 
 if __name__ == "__main__":
-    server_host = "127.0.0.1"
-    server_port = 9999
+    server_name = 'localhost'
+    server_port = 13000
 
-    connect_to_server(server_host, server_port)
+    connect_to_server(server_name, server_port)
