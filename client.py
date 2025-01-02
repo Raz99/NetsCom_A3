@@ -2,7 +2,7 @@ import math
 from socket import *
 from InputFileReader import *
 
-# Global Variables
+# Global variables
 HEADER_SIZE = 4
 
 def send_message(client_socket, message, maximum_msg_size, window_size):
@@ -26,24 +26,24 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
         print(f"Content: \"{content.decode('utf-8')}\"")
         i += 1
 
-    # waiting for the next ack
-    # while i < num_of_messages:
-    #     ack = int(client_socket.recv(1024).decode('utf-8'))  # Waits for ack
-    #     print(f"ACK{ack} has been received")
-    #
-    #     # # sending a package if ack arrived
-    #     for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
-    #         start = j * maximum_msg_size
-    #         end = start + maximum_msg_size
-    #         content = message_bytes[start:end]
-    #         sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
-    #         package = sequence_number + content
-    #         if len(package) > int(maximum_msg_size) + header_size:
-    #             content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
-    #             package = f"{i}|".encode('utf-8') + content
-    #         client_socket.send(package)  # Sends the package
-    #         print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
-    #         i = ack + 1
+    # Waits for the next ack
+    while i < num_of_messages:
+        ack = int(client_socket.recv(1024).decode('utf-8'))  # Waits for ack
+        print(f"ACK{ack} has been received")
+
+        # # sending a package if ack arrived
+        for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
+            start = j * maximum_msg_size
+            end = start + maximum_msg_size
+            content = message_bytes[start:end]
+            sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
+            package = sequence_number + content
+            if len(package) > int(maximum_msg_size) + HEADER_SIZE:
+                content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
+                package = f"{i}|".encode('utf-8') + content
+            client_socket.send(package)  # Sends the package
+            print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
+            i = ack + 1
 
 def connect_to_server(host, port):
     server_addr = (host, port)
@@ -58,8 +58,8 @@ def connect_to_server(host, port):
     print("Waiting for server's response...")
 
     # Client gets a response from Server
-    maximum_msg_size = client_socket.recv(4096)
-    print('From Server:', maximum_msg_size.decode('utf-8'))
+    maximum_msg_size = int(client_socket.recv(4096).decode('utf-8'))
+    print('From Server:', maximum_msg_size)
 
     file_reader = InputFileReader("input.txt")  # Reads input file
 
@@ -94,7 +94,8 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
-    send_message(client_socket, message, int(maximum_msg_size), int(window_size))
+    window_size = int(window_size)
+    send_message(client_socket, message, maximum_msg_size, window_size)
 
     # message.byte.size < clientSocket.recv(maximum_msg_size)
 

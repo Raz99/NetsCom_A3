@@ -13,10 +13,8 @@ def split_data(data, maximum_msg_size, remaining_messages):
 
 
 def handle_client(server_addr):
-    # server_socket = socket.socket()
     server_socket = socket(AF_INET, SOCK_STREAM)
     server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)  # Reuse Address - Allows the socket to reuse the address
-    # [?] - Buffer Size - Sets the send/receive buffer sizes
     server_socket.bind(server_addr)
     server_socket.listen(1)
     keep_handling = True
@@ -47,10 +45,11 @@ def handle_client(server_addr):
 
                 else:
                     print('[Prompt] Invalid input')
-
+            print(f"Sent to Client: Maximum message size is {maximum_msg_size}",end="")
             client_connection.send(maximum_msg_size.encode('utf-8'))
+            maximum_msg_size = int(maximum_msg_size)
 
-        if maximum_msg_size is not None:  # if maximum_msg_size has been already defined
+        if maximum_msg_size:  # if maximum_msg_size has been already defined
             # Gets packages from Client
             full_message = ""
             received_sequences = {}
@@ -67,34 +66,35 @@ def handle_client(server_addr):
                     keep_handling = False  # Server will stop handling clients altogether
                     break
 
-                split_data(data, int(maximum_msg_size), remaining_messages)
+                split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
                     full_message = full_message + content
                     print(f"Got from client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
-                remaining_messages = []
 
-                # ACK
-                # If the current message is in sequence, then update last_ack
-                # if sequence_number == (last_ack + 1):
-                #     last_ack += 1
-                #
-                #     # Checks if received messages out of order are now in sequence
-                #     while (last_ack + 1) in received_out_of_order:
-                #         last_ack += 1
-                #         received_out_of_order.remove(last_ack)
-                #
-                # else:
-                #     # If the current message is not in sequence, then add it to received_out_of_order
-                #     received_out_of_order.append(sequence_number)
-                #
-                # # Sends ACK to Client
-                # # ack_message = f"ACK{last_ack}"
-                # # client_connection.send(ack_message.encode('utf-8'))
-                # # print(f"Sent to Client: {ack_message}")
-                #
-                # client_connection.send(str(last_ack).encode('utf-8'))
-                # print(f"Sent to Client: ACK{last_ack}")
+                    # ACK
+                    # If the current message is in sequence, then update last_ack
+                    if sequence_number == (last_ack + 1):
+                        last_ack += 1
+
+                        # Checks if received messages out of order are now in sequence
+                        while (last_ack + 1) in received_out_of_order:
+                            last_ack += 1
+                            received_out_of_order.remove(last_ack)
+
+                    else:
+                        # If the current message is not in sequence, then add it to received_out_of_order
+                        received_out_of_order.append(sequence_number)
+
+                    # Sends ACK to Client
+                    # ack_message = f"ACK{last_ack}"
+                    # client_connection.send(ack_message.encode('utf-8'))
+                    # print(f"Sent to Client: {ack_message}")
+
+                    client_connection.send(str(last_ack).encode('utf-8'))
+                    print(f"Sent to Client: ACK{last_ack}")
+
+                remaining_messages.clear()
 
             print("Client disconnected")
             client_connection.close()
