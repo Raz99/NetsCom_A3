@@ -15,7 +15,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
     num_of_messages = math.ceil(message_size / maximum_msg_size)
     i = 0  # Current message index
 
-        # Sends the initial window of messages
+    # Sends the initial window of messages
     while i < num_of_messages and i < window_size:
         start = i * maximum_msg_size
         end = min(start + maximum_msg_size, message_size)
@@ -118,7 +118,7 @@ def connect_to_server(host, port):
     client_socket.close()
 
 if __name__ == "__main__":
-    server_host = 'localhost'
-    server_port = 13000
+    server_host = "127.0.0.1"
+    server_port = 9999
 
     connect_to_server(server_host, server_port)
