@@ -2,7 +2,7 @@ import math
 from socket import *
 from InputFileReader import *
 
-def send_message(socket, message, maximum_msg_size, window_size):
+def send_message(client_socket, message, maximum_msg_size, window_size):
     message_bytes = message.encode('utf-8')  # Converts to bytes
     message_size = len(message_bytes)       # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
@@ -10,83 +10,75 @@ def send_message(socket, message, maximum_msg_size, window_size):
     i = 0  # Current message index
 
     # Sends the initial window of messages
-    #while i < num_of_messages and i < window_size:
-    while i < num_of_messages:
+    while i < num_of_messages and i < window_size:
         start = i * maximum_msg_size
         end = min(start + maximum_msg_size, message_size)
         content = message_bytes[start:end]
         sequence_number = f"{i}|".encode('utf-8')  # Adds sequence number
         package = sequence_number + content
-        if len(package) > int(maximum_msg_size):
-            content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
-            package = f"{i}|".encode('utf-8') + content
-
-        socket.send(package)  # Sends the package
-        print(f"M{i} has been sent to server at the (status: {i + 1}/{num_of_messages})")
+        client_socket.send(package)  # Sends the package
+        print(f"M{i} has been sent to server (status: {i + 1}/{num_of_messages}):")
+        print(f"Content: \"{content.decode('utf-8')}\"")
         i += 1
 
     # waiting for the next ack
-    while i < num_of_messages:
-        ack = int(socket.recv(1024).decode('utf-8'))  # Waits for ack
-        print(f"ACK{ack} has been received")
+    # while i < num_of_messages:
+    #     ack = int(client_socket.recv(1024).decode('utf-8'))  # Waits for ack
+    #     print(f"ACK{ack} has been received")
+    #
+    #     # # sending a package if ack arrived
+    #     for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
+    #         start = j * maximum_msg_size
+    #         end = start + maximum_msg_size
+    #         content = message_bytes[start:end]
+    #         sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
+    #         package = sequence_number + content
+    #         if len(package) > int(maximum_msg_size) + header_size:
+    #             content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
+    #             package = f"{i}|".encode('utf-8') + content
+    #         client_socket.send(package)  # Sends the package
+    #         print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
+    #         i = ack + 1
 
-        # # sending a package if ack arrived
-        for j in range(ack + 1, min(ack + 1 + window_size, num_of_messages)):
-            start = j * maximum_msg_size
-            end = start + maximum_msg_size
-            content = message_bytes[start:end]
-            sequence_number = f"{j}|".encode('utf-8')  # Adds sequence number
-            package = sequence_number + content
-            if len(package) > int(maximum_msg_size):
-                content = content[:(int(maximum_msg_size) - len(f"{i}|".encode('utf-8')))]
-                package = f"{i}|".encode('utf-8') + content
-            socket.send(package)  # Sends the package
-            print(f"M{j} has been sent to server (status: {j + 1}/{num_of_messages})")
-            i = ack + 1
-
-
-if __name__ == "__main__":
-    # SERVER_ADDRESS = ('localhost', 13000)
-    serverName = 'localhost'
-    serverPort = 13000
-    SERVER_ADDRESS = (serverName, serverPort)
-
-    # clientSocket = socket.socket()
-    clientSocket = socket(AF_INET, SOCK_STREAM)
-    clientSocket.connect(SERVER_ADDRESS)
+def connect_to_server(host, port):
+    server_addr = (host, port)
+    client_socket = socket(AF_INET, SOCK_STREAM)
+    client_socket.connect(server_addr)
+    print(f"Connected to server at: {host} on port {port}")
 
     # Client sends a request to Server
-    print("The client is asking the server for maximum size of a single message")
-    sentence = "asking the maximum size of of a single message"
-    clientSocket.send(sentence.encode())
+    sentence = "Define the maximum size of a single message"
+    client_socket.send(sentence.encode())
+    print(f"Sent to Server: {sentence}")
+    print("Waiting for server's response...")
 
     # Client gets a response from Server
-    maximum_msg_size = clientSocket.recv(4096)
-    print('From Server:', maximum_msg_size.decode())
+    maximum_msg_size = client_socket.recv(4096)
+    print('From Server:', maximum_msg_size.decode('utf-8'))
 
-    file_reader = InputFileReader("input.txt") # Reads input file
+    file_reader = InputFileReader("input.txt")  # Reads input file
 
     message = None
     while message is None:
-        choice = input('Choose a number representing how you prefer to pass the content of the message\n'
-                       '([1] input from the user | [2] from a text input file): ')
+        choice = input('[Prompt] Choose a number representing how you prefer to pass the content of the message\n'
+                       '[Prompt] ([1] input from the user | [2] from a text input file): ')
 
         if int(choice) == 1:
-            message = input('Provide the message: ')
+            message = input('[Prompt] Provide the message: ')
 
         elif int(choice) == 2:
             message = file_reader.get_value("message")
 
         else:
-            print('Invalid input')
+            print('[Prompt] Invalid input')
 
     window_size = None
     while window_size is None:
-        choice = input('Choose a number representing how you prefer to pass the value of the window size\n'
-                       '([1] input from the user | [2] from a text input file): ')
+        choice = input('[Prompt] Choose a number representing how you prefer to pass the value of the window size\n'
+                       '[Prompt] ([1] input from the user | [2] from a text input file): ')
 
         if int(choice) == 1:
-            window_size = input('Provide the required window size:')
+            window_size = input('[Prompt] Provide the required window size:')
 
             if not window_size.isnumeric():
                 raise ValueError("Window size should be a number")
@@ -95,16 +87,20 @@ if __name__ == "__main__":
             window_size = file_reader.get_value("window_size")
 
         else:
-            print('Invalid input')
+            print('[Prompt] Invalid input')
 
-
-    send_message(clientSocket, message, int(maximum_msg_size), int(window_size))
+    send_message(client_socket, message, int(maximum_msg_size), int(window_size))
 
     # message.byte.size < clientSocket.recv(maximum_msg_size)
-
 
     # while(not all acks has been returned)
     #     clientSocket.send(sentence.encode()) # Sending message
     #     clientSocket.sendall()
 
-    clientSocket.close()
+    client_socket.close()
+
+if __name__ == "__main__":
+    server_name = 'localhost'
+    server_port = 13000
+
+    connect_to_server(server_name, server_port)
