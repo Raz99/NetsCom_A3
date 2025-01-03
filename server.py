@@ -47,7 +47,7 @@ def handle_client(server_addr):
                 else:
                     print('[Prompt] Invalid input')
 
-            print(f"Sent to Client: Maximum message size is {maximum_msg_size}",end="")
+            print(f"Sent to Client: Maximum message size is {maximum_msg_size}")
             print("Waiting for client's response...")
             client_connection.send(maximum_msg_size.encode('utf-8'))
             maximum_msg_size = int(maximum_msg_size)
@@ -103,7 +103,7 @@ def handle_client(server_addr):
 
 
 if __name__ == "__main__":
-    server_name = ''
-    server_port = 13000
+    server_name = '127.0.0.1'
+    server_port = 999
 
     handle_client((server_name, server_port))

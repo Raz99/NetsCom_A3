@@ -6,7 +6,7 @@ from InputFileReader import *
 HEADER_SIZE = 4
 
 def strip_ack(ack_message):
-    index = ack_message.rfind("ACK") # Find the last occurrence of "ACK"
+    index = ack_message.rfind("ACK") # Finds the last occurrence of "ACK"
     return int(ack_message[index + 3:])
 
 def send_message(client_socket, message, maximum_msg_size, window_size):
@@ -16,10 +16,12 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
 
     # Sends the initial window of messages
     i = 0  # Current message index
-    ack = -1 # No ACKs has been received yet
-    limit = window_size
-    while i < num_of_messages or i < ack + 1:
-        if i < window_size or i < limit:
+    last_ack = -1 # No ACKs has been received yet
+    LAR = last_ack
+    LSS = LAR
+
+    while i < num_of_messages or i < last_ack + 1:
+        if LSS-LAR < window_size: # Means there is an available spot in the window
             start = i * maximum_msg_size
             end = min(start + maximum_msg_size, message_size)
             content = message_bytes[start:end]
@@ -29,19 +31,19 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
             client_socket.send(package)  # Sends the package
+            LSS += 1
             print(f"Sent to Server: [M{i}] Content: \"{content.decode('utf-8')}\" (status: {i + 1}/{num_of_messages}):")
             i += 1
 
-        print(f"[Prompt] Window status: {limit - i}/{window_size} available slots")
+        print(f"[Prompt] Window status: {LSS-LAR}/{window_size} occupied slots")
         ack_message = client_socket.recv(4096).decode('utf-8')
 
         if not ack_message:
-            continue
+            continue # Keep sending packages
 
-        prev_ack = ack
-        ack = strip_ack(ack_message)
-        print(f"Got from Server: ACK{ack}")
-        limit += ack - prev_ack # Slides window
+        LAR += 1
+        last_ack = strip_ack(ack_message)
+        print(f"Got from Server: ACK{last_ack}")
 
 def connect_to_server(host, port):
     server_addr = (host, port)
@@ -102,7 +104,7 @@ def connect_to_server(host, port):
     client_socket.close()
 
 if __name__ == "__main__":
-    server_name = 'localhost'
-    server_port = 13000
+    server_name = '127.0.0.1'
+    server_port = 9999
 
     connect_to_server(server_name, server_port)
