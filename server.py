@@ -1,3 +1,4 @@
+import random
 from socket import *
 from InputFileReader import *
 from client import HEADER_SIZE
@@ -47,7 +48,7 @@ def handle_client(server_addr):
                 else:
                     print('[Prompt] Invalid input')
 
-            print(f"Sent to Client: Maximum message size is {maximum_msg_size}")
+            print(f"Sent to Client: Maximum message size is {int(maximum_msg_size)}")
             print("Waiting for client's response...")
             client_connection.send(maximum_msg_size.encode('utf-8'))
             maximum_msg_size = int(maximum_msg_size)
@@ -61,6 +62,14 @@ def handle_client(server_addr):
             remaining_messages = []
 
             while True:
+                # Edge case
+                # Simulate random packet loss (20% chance)
+                if random.random() < 0.2:
+                    # Deliberately skip sending ACK
+                    _ = client_connection.recv(4096)
+                    continue
+                # Edge case
+
                 data = client_connection.recv(4096)
 
                 if not data:
@@ -71,6 +80,11 @@ def handle_client(server_addr):
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
+                    # Edge Case: Loss of package - start
+                    # if sequence_number == 2:
+                    #     continue
+                    # Edge Case: Loss of package - end
+
                     full_message = full_message + content
                     print(f"Got from Client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
@@ -104,6 +118,6 @@ def handle_client(server_addr):
 
 if __name__ == "__main__":
     server_name = '127.0.0.1'
-    server_port = 9999
+    server_port = 8080
 
     handle_client((server_name, server_port))

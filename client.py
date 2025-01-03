@@ -1,4 +1,5 @@
 import math
+import time
 from socket import *
 from InputFileReader import *
 
@@ -9,19 +10,17 @@ def strip_ack(ack_message):
     index = ack_message.rfind("ACK") # Finds the last occurrence of "ACK"
     return int(ack_message[index + 3:])
 
-def send_message(client_socket, message, maximum_msg_size, window_size):
+def send_message(client_socket, message, maximum_msg_size, window_size, time_out):
     message_bytes = message.encode('utf-8') # Converts to bytes
     message_size = len(message_bytes) # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
 
     # Sends the initial window of messages
     i = 0  # Current message index
-    last_ack = -1 # No ACKs has been received yet
-    LAR = last_ack
-    LSS = LAR
+    last_ack = lar = lss = -1
 
     while i < num_of_messages or i < last_ack + 1:
-        if LSS-LAR < window_size: # Means there is an available spot in the window
+        if lss-lar < window_size: # Means there is an available spot in the window
             start = i * maximum_msg_size
             end = min(start + maximum_msg_size, message_size)
             content = message_bytes[start:end]
@@ -31,17 +30,26 @@ def send_message(client_socket, message, maximum_msg_size, window_size):
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
             client_socket.send(package)  # Sends the package
-            LSS += 1
-            print(f"Sent to Server: [M{i}] Content: \"{content.decode('utf-8')}\" (status: {i + 1}/{num_of_messages}):")
+            if lar + 1 == i:
+                start_time = time.time()
+            print(f"Sent to Server: [M{i}] Content: \"{content.decode('utf-8')}\" (status: {i + 1}/{num_of_messages})")
             i += 1
+            lss += 1
 
-        print(f"[Prompt] Window status: {LSS-LAR}/{window_size} occupied slots")
+        print(f"[Prompt] Window status: {lss-lar}/{window_size} occupied slots")
+
+        current_time = time.time()
+        time_passed = current_time - start_time
+        if time_passed > time_out:
+            print(f"[Prompt] M{lar+i} has not received ACK yet and timeout was exceeded, sending un-ACKed messages again...")
+            i = lss = lar + 1
+            continue
+
         ack_message = client_socket.recv(4096).decode('utf-8')
-
         if not ack_message:
-            continue # Keep sending packages
+            continue # Keep sending packages if there are available spots in window size
 
-        LAR += 1
+        lar += 1
         last_ack = strip_ack(ack_message)
         print(f"Got from Server: ACK{last_ack}")
 
@@ -96,15 +104,36 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
-    print(f"[Prompt] Window size: {window_size}")
+    print(f"[Prompt] Window size: {int(window_size)}")
     window_size = int(window_size)
-    send_message(client_socket, message, maximum_msg_size, window_size)
+
+    timeout = None
+    while timeout is None:
+        choice = input('[Prompt] Choose a number representing how you prefer to pass the value of the timeout\n'
+                       '[Prompt] ([1] input from the user | [2] from a text input file): ')
+
+        if int(choice) == 1:
+            timeout = input('[Prompt] Provide the required timeout: ')
+
+            if not timeout.isnumeric():
+                raise ValueError("The timeout should be a number")
+
+        elif int(choice) == 2:
+            timeout = file_reader.get_value("timeout")
+
+        else:
+            print('[Prompt] Invalid input')
+
+    print(f"[Prompt] Timeout: {timeout}")
+    timeout = int(timeout)
+
+    send_message(client_socket, message, maximum_msg_size, window_size, timeout)
 
     print("Connection closed")
     client_socket.close()
 
 if __name__ == "__main__":
     server_name = '127.0.0.1'
-    server_port = 9999
+    server_port = 8080
 
     connect_to_server(server_name, server_port)

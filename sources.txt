@@ -1,6 +1,7 @@
-https://chatgpt.com/share/6772ee47-0360-8000-8dbf-8331ac06a570 - הסבר על מרכיבי המטלה
 https://www.w3schools.com/python/ref_file_readlines.asp - הסבר על פתיחה וקריאה מקובץ
 https://www.30secondsofcode.org/python/s/byte-size - כמות בתים בהודעה
 https://www.geeksforgeeks.org/floor-ceil-function-python - לעגל מספר כלפי מעלה
 https://www.w3schools.com/python/python_tuples.asp - tuple
 https://www.w3schools.com/python/ref_string_rfind.asp - rfind method
+https://stackoverflow.com/questions/70058132/how-do-i-make-a-timer-in-python - איך לבנות טיימר
+https://courses.campus.gov.il/courses/ccx-v1:ARIEL+ACD_RFP4_ARIEL_comm+1_2022+ccx@23182/courseware/a2504de1c86541dbac93e9be39db2100/7c3f6ce417cb4ac09b3bb1530143ea33 - window & timeout
