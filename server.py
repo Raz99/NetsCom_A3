@@ -1,4 +1,4 @@
-import random
+import random # temp
 from socket import *
 from InputFileReader import *
 from client import HEADER_SIZE
@@ -25,14 +25,15 @@ def handle_client(server_addr):
         client_connection, client_addr = server_socket.accept()
         print(f"Accepted connection from {client_addr}")
         sentence = client_connection.recv(4096).decode('utf-8')
-        print(f"Got from client {client_addr}: {sentence}")
+        while not sentence: # Edge case of not getting any sentence
+            sentence = client_connection.recv(4096).decode('utf-8')
+        print(f"Got from Client {client_addr}: {sentence}")
 
         maximum_msg_size = None
         if sentence == "Define the maximum size of a single message":
             while maximum_msg_size is None:
-                choice = input(
-                    '[Prompt] Choose a number representing how you prefer to pass the value of the maximum message size (bytes)\n'
-                    '[Prompt] ([1] input from the user | [2] from a text input file): ')
+                choice = input('[Prompt] Choose a number representing how you prefer to pass the value of the maximum message size (bytes)\n'
+                               '[Prompt] ([1] input from the user | [2] from a text input file): ')
 
                 if int(choice) == 1:
                     maximum_msg_size = input("[Prompt] Enter the maximum message size: ")
@@ -46,39 +47,45 @@ def handle_client(server_addr):
 
                 else:
                     print('[Prompt] Invalid input')
-            print(f"Sent to Client: Maximum message size is {maximum_msg_size}",end="")
+
+            print(f"Sent to Client: Maximum message size is {int(maximum_msg_size)}")
+            print("Waiting for client's response...")
             client_connection.send(maximum_msg_size.encode('utf-8'))
             maximum_msg_size = int(maximum_msg_size)
 
+
         if maximum_msg_size:  # if maximum_msg_size has been already defined
             # Gets packages from Client
-            full_message = ""
             last_ack = -1
             received_out_of_order = []
             remaining_messages = []
+            received_messages = {}
 
             while True:
+                # Edge case
+                # Simulate random packet loss (20% chance)
                 if random.random() < 0.2:
+                    # Deliberately skip sending ACK
                     _ = client_connection.recv(4096)
                     continue
+                # Edge case
                 data = client_connection.recv(4096)
 
-
                 if not data:
-                    print(f"The message is: \"{full_message}\"")
+                    full_message = ""
+                    for seq in sorted(received_messages.keys()):
+                        full_message += received_messages[seq]['content']
+                    print(f"[Prompt] The message is: \"{full_message}\"")
                     keep_handling = False  # Server will stop handling clients altogether
                     break
 
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
-                    #
-                    # if sequence_number == 2:
-                    #     continue
-                    full_message = full_message + content
-                    print(f"Got from client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
+                    received_messages[sequence_number] = {'seq': sequence_number, 'content': content}
+                    print(f"Got from Client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
-                    # ACK
+                    # ACK Handling
                     # If the current message is in sequence, then update last_ack
                     if sequence_number == (last_ack + 1):
                         last_ack += 1
@@ -97,9 +104,6 @@ def handle_client(server_addr):
                     client_connection.send(ack_message.encode('utf-8'))
                     print(f"Sent to Client: {ack_message}")
 
-                    # client_connection.send(str(last_ack).encode('utf-8'))
-                    # print(f"Sent to Client: ACK{last_ack}")
-
                 remaining_messages.clear()
 
             print("Client disconnected")
@@ -110,7 +114,7 @@ def handle_client(server_addr):
 
 
 if __name__ == "__main__":
-    server_name = '127.0.0.1'
-    server_port = 9999
+    server_name = "127.0.0.1"
+    server_port = 8080
 
     handle_client((server_name, server_port))

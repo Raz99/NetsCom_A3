@@ -1,6 +1,8 @@
 import math
 import time
 from socket import *
+from unittest.mock import sentinel
+
 from InputFileReader import *
 
 # Global variables
@@ -18,37 +20,10 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
     # Sends the initial window of messages
     lar = -1
     lss = 0
-    start_time = {}
+    sent_time = time.time()
 
     while lar < num_of_messages - 1:
-        while lss < num_of_messages and lss - lar <= window_size:
-            start = lss * maximum_msg_size
-            end = min(start + maximum_msg_size, message_size)
-            content = message_bytes[start:end]
-            sequence_number = f"{lss}" # Adds sequence number
-            while len(sequence_number) < HEADER_SIZE:
-                sequence_number = " " + sequence_number
-            sequence_number = sequence_number.encode('utf-8')
-            package = sequence_number + content
-            client_socket.send(package)  # Sends the package
-            start_time[lss] = time.time()
-            print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages}):")
-            print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
-            lss += 1
 
-            # Check for ACKs after sending each packet
-            try:
-                client_socket.settimeout(0.1)  # Non-blocking wait for ACKs
-                ack_message = client_socket.recv(4096).decode('utf-8')
-                if ack_message:
-                    ack_number = strip_ack(ack_message)
-                    if ack_number > lar:
-                        print(f"Got from Server: ACK{ack_number}")
-                        lar = ack_number
-            except timeout:
-                pass
-
-        current_time = time.time()
         try:
             client_socket.settimeout(0.1)  # Non-blocking wait for ACKs
             ack_message = client_socket.recv(4096).decode('utf-8')
@@ -60,8 +35,9 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
         except timeout:
             pass
 
-        for i in range(lar + 1, lss):
-            if current_time - start_time.get(i, 0) > time_out:
+        current_time = time.time()
+        if current_time - sent_time > time_out:
+            for i in range(lar + 1, lss):
                 print(f"Timeout exceeded for M{i}. Resending...")
                 start = i * maximum_msg_size
                 end = min(start + maximum_msg_size, message_size)
@@ -72,8 +48,23 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
                 sequence_number = sequence_number.encode('utf-8')
                 package = sequence_number + content
                 client_socket.send(package)  # Sends the package
-                start_time[i] = time.time()
                 print(f"Resent to Server: [M{i}] Content: \"{content.decode('utf-8')}\"")
+            sent_time =time.time()
+
+        if lss < num_of_messages and lss - lar <= window_size:
+            start = lss * maximum_msg_size
+            end = min(start + maximum_msg_size, message_size)
+            content = message_bytes[start:end]
+            sequence_number = f"{lss}" # Adds sequence number
+            while len(sequence_number) < HEADER_SIZE:
+                sequence_number = " " + sequence_number
+            sequence_number = sequence_number.encode('utf-8')
+            package = sequence_number + content
+            client_socket.send(package)  # Sends the package
+            print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages}):")
+            print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
+            lss += 1
+            sent_time = time.time()
 
 
 def connect_to_server(host, port):
@@ -157,6 +148,6 @@ def connect_to_server(host, port):
 
 if __name__ == "__main__":
     server_name = '127.0.0.1'
-    server_port = 9999
+    server_port = 8080
 
     connect_to_server(server_name, server_port)
