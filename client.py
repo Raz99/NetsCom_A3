@@ -16,24 +16,23 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
     num_of_messages = math.ceil(message_size / maximum_msg_size)
 
     # Sends the initial window of messages
-    i = 0  # Current message index
-    last_ack = lar = lss = -1
+    lss = 0
+    last_ack = lar = -1
 
-    while i < num_of_messages or i < last_ack + 1:
+    while lss < num_of_messages or lss < last_ack + 1:
         if lss-lar < window_size: # Means there is an available spot in the window
-            start = i * maximum_msg_size
+            start = lss * maximum_msg_size
             end = min(start + maximum_msg_size, message_size)
             content = message_bytes[start:end]
-            sequence_number = f"{i}" # Adds sequence number
+            sequence_number = f"{lss}" # Adds sequence number
             while len(sequence_number) < HEADER_SIZE:
                 sequence_number = " " + sequence_number
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
             client_socket.send(package)  # Sends the package
-            if lar + 1 == i:
+            if lar + 1 == lss:
                 start_time = time.time()
-            print(f"Sent to Server: [M{i}] Content: \"{content.decode('utf-8')}\" (status: {i + 1}/{num_of_messages})")
-            i += 1
+            print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages})")
             lss += 1
 
         print(f"[Prompt] Window status: {lss-lar}/{window_size} occupied slots")
@@ -41,8 +40,8 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
         current_time = time.time()
         time_passed = current_time - start_time
         if time_passed > time_out:
-            print(f"[Prompt] M{lar+i} has not received ACK yet and timeout was exceeded, sending un-ACKed messages again...")
-            i = lss = lar + 1
+            print(f"[Prompt] M{lar+lss} has not received ACK yet and timeout was exceeded, sending un-ACKed messages again...")
+            lss = lar + 1
             continue
 
         ack_message = client_socket.recv(4096).decode('utf-8')

@@ -80,11 +80,6 @@ def handle_client(server_addr):
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
-                    # Edge Case: Loss of package - start
-                    # if sequence_number == 2:
-                    #     continue
-                    # Edge Case: Loss of package - end
-
                     full_message = full_message + content
                     print(f"Got from Client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
