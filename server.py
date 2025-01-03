@@ -67,6 +67,9 @@ def handle_client(server_addr):
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
+
+                    if sequence_number == 2:
+                        continue
                     full_message = full_message + content
                     print(f"Got from client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
@@ -102,7 +105,7 @@ def handle_client(server_addr):
 
 
 if __name__ == "__main__":
-    server_name = ''
-    server_port = 13000
+    server_name = '127.0.0.1'
+    server_port = 9999
 
     handle_client((server_name, server_port))
