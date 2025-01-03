@@ -111,7 +111,7 @@ def handle_client(server_addr):
 
 
 if __name__ == "__main__":
-    server_name = '127.0.0.1'
+    server_name = "127.0.0.1"
     server_port = 8080
 
     handle_client((server_name, server_port))
