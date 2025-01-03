@@ -36,26 +36,37 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
             print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
             lss += 1
 
-        flag = True
-        ack_message = ""
-        while flag:
-            flag = False
-            ack_message = client_socket.recv(4096).decode('utf-8')
-            if ack_message:
-                last_ack = strip_ack(ack_message)
-                if last_ack > lar:
-                    lar = last_ack
-                    print(f"Got from Server: ACK{last_ack}")
-                    flag = True
+            # Check for ACKs after sending each packet
+            try:
+                client_socket.settimeout(0.1)  # Non-blocking wait for ACKs
+                ack_message = client_socket.recv(4096).decode('utf-8')
+                if ack_message:
+                    ack_number = strip_ack(ack_message)
+                    if ack_number > lar:
+                        print(f"Got from Server: ACK{ack_number}")
+                        lar = ack_number
+            except timeout:
+                pass
 
         current_time = time.time()
+        try:
+            client_socket.settimeout(0.1)  # Non-blocking wait for ACKs
+            ack_message = client_socket.recv(4096).decode('utf-8')
+            if ack_message:
+                ack_number = strip_ack(ack_message)
+                if ack_number > lar:
+                    print(f"Got from Server: ACK{ack_number}")
+                    lar = ack_number
+        except timeout:
+            pass
+
         for i in range(lar + 1, lss):
             if current_time - start_time.get(i, 0) > time_out:
                 print(f"Timeout exceeded for M{i}. Resending...")
                 start = i * maximum_msg_size
                 end = min(start + maximum_msg_size, message_size)
                 content = message_bytes[start:end]
-                sequence_number = f"{lss}"  # Adds sequence number
+                sequence_number = f"{i}"  # Adds sequence number
                 while len(sequence_number) < HEADER_SIZE:
                     sequence_number = " " + sequence_number
                 sequence_number = sequence_number.encode('utf-8')

@@ -1,3 +1,4 @@
+import random
 from socket import *
 from InputFileReader import *
 from client import HEADER_SIZE
@@ -57,7 +58,11 @@ def handle_client(server_addr):
             remaining_messages = []
 
             while True:
+                if random.random() < 0.2:
+                    _ = client_connection.recv(4096)
+                    continue
                 data = client_connection.recv(4096)
+
 
                 if not data:
                     print(f"The message is: \"{full_message}\"")
@@ -67,9 +72,9 @@ def handle_client(server_addr):
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
-
-                    if sequence_number == 2:
-                        continue
+                    #
+                    # if sequence_number == 2:
+                    #     continue
                     full_message = full_message + content
                     print(f"Got from client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
