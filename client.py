@@ -17,9 +17,11 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
 
     # Sends the initial window of messages
     lss = 0
-    last_ack = lar = -1
+    lar = -1
 
-    while lss < num_of_messages or lss < last_ack + 1:
+    # While there are still messages to send
+    # or all the messages have been already sent, but not all the ACKs have been received
+    while lss < num_of_messages or lar < num_of_messages - 1:
         if lss-lar < window_size: # Means there is an available spot in the window
             start = lss * maximum_msg_size
             end = min(start + maximum_msg_size, message_size)
@@ -33,24 +35,23 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
             if lar + 1 == lss:
                 start_time = time.time()
             print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages})")
+            print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
             lss += 1
 
-        print(f"[Prompt] Window status: {lss-lar}/{window_size} occupied slots")
-
-        current_time = time.time()
-        time_passed = current_time - start_time
-        if time_passed > time_out:
-            print(f"[Prompt] M{lar+lss} has not received ACK yet and timeout was exceeded, sending un-ACKed messages again...")
+        if start_time and (time.time() - start_time) > time_out:
+            print(f"[Prompt] M{lar+1} has not received ACK yet and timeout was exceeded, sending un-ACKed messages again...")
             lss = lar + 1
+            start_time = None
             continue
 
         ack_message = client_socket.recv(4096).decode('utf-8')
         if not ack_message:
             continue # Keep sending packages if there are available spots in window size
 
-        lar += 1
         last_ack = strip_ack(ack_message)
         print(f"Got from Server: ACK{last_ack}")
+        lar = last_ack
+        start_time = None
 
 def connect_to_server(host, port):
     server_addr = (host, port)
@@ -124,7 +125,7 @@ def connect_to_server(host, port):
             print('[Prompt] Invalid input')
 
     print(f"[Prompt] Timeout: {timeout}")
-    timeout = int(timeout)
+    timeout = float(timeout)
 
     send_message(client_socket, message, maximum_msg_size, window_size, timeout)
 
