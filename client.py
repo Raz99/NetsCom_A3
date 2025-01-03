@@ -18,7 +18,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
     num_of_messages = math.ceil(message_size / maximum_msg_size)
 
     # Sends the initial window of messages
-    lar = -1
+    lar = ack_number = -1
     lss = 0
     sent_time = time.time()
 
@@ -49,7 +49,8 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
                 package = sequence_number + content
                 client_socket.send(package)  # Sends the package
                 print(f"Resent to Server: [M{i}] Content: \"{content.decode('utf-8')}\"")
-            sent_time =time.time()
+                if lar == ack_number:
+                    sent_time =time.time()
 
         if lss < num_of_messages and lss - lar <= window_size:
             start = lss * maximum_msg_size
@@ -64,7 +65,8 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
             print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages}):")
             print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
             lss += 1
-            sent_time = time.time()
+            if lar == ack_number:
+                sent_time = time.time()
 
 
 def connect_to_server(host, port):
