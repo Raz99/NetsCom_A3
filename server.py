@@ -104,6 +104,6 @@ def handle_client(server_addr):
 
 if __name__ == "__main__":
     server_name = '127.0.0.1'
-    server_port = 999
+    server_port = 9999
 
     handle_client((server_name, server_port))
