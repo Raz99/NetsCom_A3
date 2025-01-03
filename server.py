@@ -56,10 +56,10 @@ def handle_client(server_addr):
 
         if maximum_msg_size:  # if maximum_msg_size has been already defined
             # Gets packages from Client
-            full_message = ""
             last_ack = -1
             received_out_of_order = []
             remaining_messages = []
+            received_messages = {}
 
             while True:
                 # Edge case
@@ -72,6 +72,9 @@ def handle_client(server_addr):
                 data = client_connection.recv(4096)
 
                 if not data:
+                    full_message = ""
+                    for seq in sorted(received_messages.keys()):
+                        full_message += received_messages[seq]['content']
                     print(f"[Prompt] The message is: \"{full_message}\"")
                     keep_handling = False  # Server will stop handling clients altogether
                     break
@@ -79,7 +82,7 @@ def handle_client(server_addr):
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
-                    full_message = full_message + content
+                    received_messages[sequence_number] = {'seq': sequence_number, 'content': content}
                     print(f"Got from Client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
                     # ACK Handling
@@ -97,9 +100,10 @@ def handle_client(server_addr):
                         received_out_of_order.append(sequence_number)
 
                     # Sends ACK to Client
-                    ack_message = f"ACK{last_ack}"
-                    client_connection.send(ack_message.encode('utf-8'))
-                    print(f"Sent to Client: {ack_message}")
+                    if last_ack >= 0:
+                        ack_message = f"ACK{last_ack}"
+                        client_connection.send(ack_message.encode('utf-8'))
+                        print(f"Sent to Client: {ack_message}")
 
                 remaining_messages.clear()
 

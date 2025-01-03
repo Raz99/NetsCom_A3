@@ -16,15 +16,45 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
     num_of_messages = math.ceil(message_size / maximum_msg_size)
 
     # Sends the initial window of messages
-    lss = 0
     lar = -1
-    start_time = None  # Timer for oldest unacknowledged message
-    unacked_messages = {}  # Store unacknowledged messages
+    lss = 0
+    start_time = {}
+    timer_start = None
 
-    # While there are still messages to send
-    # or all the messages have been already sent, but not all the ACKs have been received
-    while lss < num_of_messages or lar < num_of_messages - 1:
-        if lss-lar <= window_size and lss not in list(unacked_messages.keys()): # Means there is an available spot in the window
+    while lar < num_of_messages - 1:
+        try:
+            client_socket.settimeout(0.1)
+            ack_message = client_socket.recv(4096).decode('utf-8')
+            if ack_message:
+                ack_number = strip_ack(ack_message)
+                print(f"Got from Server: ACK{ack_number}")
+                if lar != ack_number:
+                    lar = ack_number
+                    timer_start = None  # Reset timer
+
+        except timeout:
+            pass
+
+        current_time = time.time()
+        if timer_start and (current_time - timer_start > time_out):
+            print(f"Timeout exceeded, resending all unacknowledged messages...")
+            for i in range(lar + 1, lss):
+                # if current_time - start_time.get(i, 0) > time_out:
+                print(f"Timeout exceeded for M{i}. Resending...")
+                start = i * maximum_msg_size
+                end = min(start + maximum_msg_size, message_size)
+                content = message_bytes[start:end]
+                sequence_number = f"{i}"  # Adds sequence number
+                while len(sequence_number) < HEADER_SIZE:
+                    sequence_number = " " + sequence_number
+                sequence_number = sequence_number.encode('utf-8')
+                package = sequence_number + content
+                client_socket.send(package)  # Sends the package
+                # start_time[i] = time.time()
+                print(f"Resending: [M{i}] Content: \"{content.decode('utf-8')}\" (status: {i + 1}/{num_of_messages})")
+                timer_start = None # Reset timer
+
+        if lss - lar <= window_size:
             start = lss * maximum_msg_size
             end = min(start + maximum_msg_size, message_size)
             content = message_bytes[start:end]
@@ -34,53 +64,12 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content
             client_socket.send(package)  # Sends the package
-            # if lar + 1 == lss:
-            #     start_time = time.time()
-            # Store message and start timer if it's the first unacknowledged message
-            unacked_messages[lss] = {'seq': sequence_number, 'package': package}
-            if start_time is None:
-                start_time = time.time()
+            # start_time[lss] = time.time()
+            if lss == lar + 1:
+                timer_start = time.time()
             print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages})")
             print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
             lss += 1
-
-        if start_time and (time.time() - start_time) > time_out:
-            print(f"[Prompt] M{lar+1} has not received ACK yet and timeout was exceeded, sending un-ACKed messages again...")
-            # lss = lar + 1
-            # Resend all unacknowledged messages
-            for seq in sorted(unacked_messages.keys()):
-                client_socket.send(unacked_messages[seq]['package'])
-                print(f"Resent to Server: [M{seq}]")
-            start_time = None # Reset timer
-            continue
-
-        try:
-            client_socket.settimeout(0.1)  # Short timeout for checking ACKs
-            ack_message = client_socket.recv(4096).decode('utf-8')
-
-            if not ack_message:
-                continue # Keep sending packages if there are available spots in window size
-
-            last_ack = strip_ack(ack_message)
-            print(f"Got from Server: ACK{last_ack}")
-            # lar = last_ack
-            # start_time = None
-
-            # Remove acknowledged messages
-            for seq in list(unacked_messages.keys()):
-                if seq < num_of_messages and seq <= lar:
-                    del unacked_messages[seq]
-
-            lar = last_ack
-
-            # Reset timer for next unacknowledged message if any
-            if unacked_messages:
-                start_time = time.time()
-            else:
-                start_time = None
-
-        except timeout:
-            continue  # No ACK received, continue checking
 
 def connect_to_server(host, port):
     server_addr = (host, port)
@@ -133,7 +122,7 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
-    print(f"[Prompt] Window size: {int(window_size)}")
+    print(f"[Prompt] Window size: {window_size}")
     window_size = int(window_size)
 
     timeout = None
@@ -154,7 +143,7 @@ def connect_to_server(host, port):
             print('[Prompt] Invalid input')
 
     print(f"[Prompt] Timeout: {timeout}")
-    timeout = float(timeout)
+    timeout = int(timeout)
 
     send_message(client_socket, message, maximum_msg_size, window_size, timeout)
 
