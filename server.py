@@ -62,14 +62,13 @@ def handle_client(server_addr):
             remaining_messages = []
 
             while True:
-                # Edge case
-                # Simulate random packet loss (20% chance)
-                if random.random() < 0.2:
-                    # Deliberately skip sending ACK
-                    _ = client_connection.recv(4096)
-                    continue
-                # Edge case
-
+                # # Edge case
+                # # Simulate random packet loss (20% chance)
+                # if random.random() < 0.2:
+                #     # Deliberately skip sending ACK
+                #     _ = client_connection.recv(4096)
+                #     continue
+                # # Edge case
                 data = client_connection.recv(4096)
 
                 if not data:
