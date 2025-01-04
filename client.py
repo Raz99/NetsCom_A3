@@ -1,7 +1,6 @@
 import math
 import time
 from socket import *
-from unittest.mock import sentinel
 
 from InputFileReader import *
 
@@ -9,10 +8,29 @@ from InputFileReader import *
 HEADER_SIZE = 4
 
 def strip_ack(ack_message):
+    """
+    Extracts the acknowledgment number from the ACK message.
+
+    Args:
+        ack_message (str): The acknowledgment message received from the server.
+
+    Returns:
+        int: The acknowledgment number extracted from the message.
+    """
     index = ack_message.rfind("ACK") # Finds the last occurrence of "ACK"
     return int(ack_message[index + 3:])
 
 def send_message(client_socket, message, maximum_msg_size, window_size, time_out):
+    """
+    Sends a message to the server using a sliding window protocol.
+
+    Args:
+        client_socket (socket): The socket object for the client.
+        message (str): The message to be sent to the server.
+        maximum_msg_size (int): The maximum size of a single message segment.
+        window_size (int): The size of the sliding window.
+        time_out (int): The timeout duration for waiting for ACKs.
+    """
     message_bytes = message.encode('utf-8') # Converts to bytes
     message_size = len(message_bytes) # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size)
@@ -93,6 +111,13 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
 
 
 def connect_to_server(host, port):
+    """
+    Connects to the server and initiates the message sending process.
+
+    Args:
+        host (str): The server's hostname or IP address.
+        port (int): The port number on which the server is listening.
+    """
     server_addr = (host, port)
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.connect(server_addr)
