@@ -44,7 +44,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
         if sent_time is not None and current_time - sent_time > time_out:
             print(f"Timeout exceeded for M{lar+1}. Resending all un-ACKed messages...")
             for i in range(lar + 1, lss):
-                print(f"[M{i}] Resending...")
+                print(f"[M{i}] Resending message...")
                 start = i * maximum_msg_size
                 end = min(start + maximum_msg_size, message_size)
                 content = message_bytes[start:end]

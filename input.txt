@@ -1,4 +1,4 @@
 message: "A computer network is a set of computers sharing resources located on or provided by network nodes."
-maximum_msg_size:2
-window_size:6
-timeout:1
+maximum_msg_size:5
+window_size:4
+timeout:3

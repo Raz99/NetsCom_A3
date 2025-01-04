@@ -1,4 +1,4 @@
-import random # temp
+# import random # Edge case: Loss of packages
 from socket import *
 from InputFileReader import *
 from client import HEADER_SIZE
@@ -62,13 +62,13 @@ def handle_client(server_addr):
             received_messages = {}
 
             while True:
-                # Edge case
+                # Edge case - start
                 # Simulate random packet loss (20% chance)
-                if random.random() < 0.2:
-                    # Deliberately skip sending ACK
-                    _ = client_connection.recv(4096)
-                    continue
-                # Edge case
+                # if random.random() < 0.2:
+                #     # Deliberately skip sending ACK
+                #     _ = client_connection.recv(4096)
+                #     continue
+                # Edge case - end
                 data = client_connection.recv(4096)
 
                 if not data:
