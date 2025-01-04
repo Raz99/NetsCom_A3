@@ -36,7 +36,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
     message_size = len(message_bytes) # Size of the message in bytes
     num_of_messages = math.ceil(message_size / maximum_msg_size) # Checks the number of messages after splitting the data
 
-    # Sends the initial window of messages
+    # Sliding window
     lar = -1 # Last ack
     lss = 0 # Current message
     sent_time = time.time() # Timer start
