@@ -1,4 +1,4 @@
-# import random # Edge case: Loss of packages
+# import random # Edge case (3)
 from socket import *
 from InputFileReader import *
 from client import HEADER_SIZE, INPUT_FILE_PATH
@@ -81,13 +81,13 @@ def handle_client(server_addr):
             received_messages = {}
 
             while True:
-                # Edge case - start
-                # Simulate random packet loss (20% chance)
-                # if random.random() < 0.2:
-                #     # Deliberately skip sending ACK
+                # Edge case (3) - start
+                # Simulate random packet loss (10% chance)
+                # if random.random() < 0.1:
+                #     # Skip sending ACK on purpose
                 #     _ = client_connection.recv(4096)
                 #     continue
-                # Edge case - end
+                # # Edge case (3) - end
                 data = client_connection.recv(4096)
 
                 if not data:
@@ -101,6 +101,10 @@ def handle_client(server_addr):
                 split_data(data, maximum_msg_size, remaining_messages)
 
                 for (sequence_number, content) in remaining_messages:
+                    # # Edge case (2) - start
+                    # if sequence_number == 2:
+                    #     continue
+                    # # Edge case (2) - end
                     received_messages[sequence_number] = {'seq': sequence_number, 'content': content}
                     print(f"Got from Client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
