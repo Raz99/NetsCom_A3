@@ -4,16 +4,35 @@ from InputFileReader import *
 from client import HEADER_SIZE
 
 def split_data(data, maximum_msg_size, remaining_messages):
-    header_size = HEADER_SIZE
-    while data:  # Runs as long as there are separators in data
-        sequence_number = int(data[:header_size].decode('utf-8').strip())
-        end_pos = min(header_size + maximum_msg_size, len(data))
-        content = data[header_size: end_pos].decode('utf-8')
+    """
+    Splits the received data into messages based on the header size and maximum message size.
+
+    Args:
+        data (bytes): The data received from the client.
+        maximum_msg_size (int): The maximum size of a single message.
+        remaining_messages (list): A list to store the split messages.
+
+    Returns:
+        None
+    """
+    while data:
+        sequence_number = int(data[:HEADER_SIZE].decode('utf-8').strip())
+        end_pos = min(HEADER_SIZE + maximum_msg_size, len(data))
+        content = data[HEADER_SIZE: end_pos].decode('utf-8')
         remaining_messages.append((sequence_number, content))
         data = data[end_pos:]
 
 
 def handle_client(server_addr):
+    """
+    Handles client connection, receives messages and sends acknowledgments.
+
+    Args:
+        server_addr (tuple): The server address (IP, port).
+
+    Returns:
+        None
+    """
     server_socket = socket(AF_INET, SOCK_STREAM)
     server_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)  # Reuse Address - Allows the socket to reuse the address
     server_socket.bind(server_addr)
@@ -25,7 +44,7 @@ def handle_client(server_addr):
         client_connection, client_addr = server_socket.accept()
         print(f"Accepted connection from {client_addr}")
         sentence = client_connection.recv(4096).decode('utf-8')
-        while not sentence: # Edge case of not getting any sentence
+        while not sentence:  # Edge case of not getting any sentence
             sentence = client_connection.recv(4096).decode('utf-8')
         print(f"Got from Client {client_addr}: {sentence}")
 
@@ -53,8 +72,8 @@ def handle_client(server_addr):
             client_connection.send(maximum_msg_size.encode('utf-8'))
             maximum_msg_size = int(maximum_msg_size)
 
-
-        if maximum_msg_size:  # if maximum_msg_size has been already defined
+        # If maximum_msg_size has been already defined
+        if maximum_msg_size:
             # Gets packages from Client
             last_ack = -1
             received_out_of_order = []
@@ -85,7 +104,7 @@ def handle_client(server_addr):
                     received_messages[sequence_number] = {'seq': sequence_number, 'content': content}
                     print(f"Got from Client {client_addr}: [M{sequence_number}] Content: \"{content}\"")
 
-                    # ACK Handling
+                    # ACK handling
                     # If the current message is in sequence, then update last_ack
                     if sequence_number == (last_ack + 1):
                         last_ack += 1
@@ -115,7 +134,7 @@ def handle_client(server_addr):
 
 
 if __name__ == "__main__":
-    server_name = "127.0.0.1"
+    server_name = '127.0.0.1'
     server_port = 8080
 
     handle_client((server_name, server_port))
