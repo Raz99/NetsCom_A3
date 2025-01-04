@@ -1,7 +1,7 @@
 # import random # Edge case: Loss of packages
 from socket import *
 from InputFileReader import *
-from client import HEADER_SIZE
+from client import HEADER_SIZE, INPUT_FILE_PATH
 
 def split_data(data, maximum_msg_size, remaining_messages):
     """
@@ -61,7 +61,7 @@ def handle_client(server_addr):
                         raise ValueError("Maximum message size should be a number")
 
                 elif int(choice) == 2:
-                    file_reader = InputFileReader("input.txt")  # Reads input file
+                    file_reader = InputFileReader(INPUT_FILE_PATH)  # Reads input file
                     maximum_msg_size = file_reader.get_value("maximum_msg_size")
 
                 else:

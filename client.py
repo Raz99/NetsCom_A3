@@ -6,6 +6,7 @@ from InputFileReader import *
 
 # Global variables
 HEADER_SIZE = 4
+INPUT_FILE_PATH = "input.txt"
 
 def strip_ack(ack_message):
     """
@@ -105,7 +106,7 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
             sequence_number = sequence_number.encode('utf-8')
             package = sequence_number + content # Combine the sequence number with the content
             client_socket.send(package)  # Sends the package
-            print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages}):")
+            print(f"Sent to Server: [M{lss}] Content: \"{content.decode('utf-8')}\" (status: {lss + 1}/{num_of_messages})")
             print(f"[Prompt] Window status: {lss - lar}/{window_size} occupied slots")
             if lar + 1 == lss:
                 sent_time = time.time() # Starts a new timer
@@ -135,7 +136,7 @@ def connect_to_server(host, port):
     maximum_msg_size = int(client_socket.recv(4096).decode('utf-8'))
     print(f"Got from Server: {maximum_msg_size}")
 
-    file_reader = InputFileReader("input.txt")  # Reads input file
+    file_reader = InputFileReader(INPUT_FILE_PATH)  # Reads input file
 
     message = None
     while message is None:
@@ -170,8 +171,8 @@ def connect_to_server(host, port):
         else:
             print('[Prompt] Invalid input')
 
-    print(f"[Prompt] Window size: {window_size}")
     window_size = int(window_size)
+    print(f"[Prompt] Window size: {window_size}")
 
     timeout = None
     while timeout is None:
