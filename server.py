@@ -83,7 +83,7 @@ def handle_client(server_addr):
             while True:
                 # Edge case (3) - start
                 # Simulate random packet loss (10% chance)
-                # if random.random() < 0.1:
+                # if random.random() < 0.2:
                 #     # Skip sending ACK on purpose
                 #     _ = client_connection.recv(4096)
                 #     continue

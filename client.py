@@ -49,13 +49,10 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
 
             if ack_message:
                 ack_number = strip_ack(ack_message)
+                print(f"Got from Server: ACK{ack_number}")
                 if ack_number > lar:
-                    print(f"Got from Server: ACK{ack_number}")
                     lar = ack_number
                     sent_time = None # Resets timer
-
-            else:
-                print(f"Got from Server: ACK{lar}")
 
         except timeout:
             pass
@@ -79,22 +76,20 @@ def send_message(client_socket, message, maximum_msg_size, window_size, time_out
                 if lar + 1 == i:
                     sent_time = time.time() # Starts a new timer
 
-                # Checks for ACKs
-                try:
-                    client_socket.settimeout(0.1)
-                    ack_message = client_socket.recv(4096).decode('utf-8')
-                    if ack_message:
-                        ack_number = strip_ack(ack_message)
-                        if ack_number > lar:
+                    # Checks for ACKs
+                    try:
+                        client_socket.settimeout(0.1)
+                        ack_message = client_socket.recv(4096).decode('utf-8')
+
+                        if ack_message:
+                            ack_number = strip_ack(ack_message)
                             print(f"Got from Server: ACK{ack_number}")
-                            lar = ack_number
-                            sent_time = None # Resets timer
+                            if ack_number > lar:
+                                lar = ack_number
+                                sent_time = None  # Resets timer
 
-                    else:
-                        print(f"Got from Server: ACK{lar}")
-
-                except timeout:
-                    pass
+                    except timeout:
+                        pass
 
         if lss < num_of_messages and lss - lar <= window_size:
             start = lss * maximum_msg_size
