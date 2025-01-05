@@ -1,7 +1,6 @@
 import math
 import time
 from socket import *
-
 from InputFileReader import *
 
 # Global variables
